@@ -42,3 +42,4 @@ Linux driver for Realtek **RTL8192EU** based on official's **TP Link TL - WN823N
  
  # Original TP Link driver:
  https://static.tp-link.com/2018/201805/20180514/TP-Link_Driver_Linux_series8_beta.zip
+
