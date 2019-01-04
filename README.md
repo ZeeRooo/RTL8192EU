@@ -15,7 +15,7 @@ Linux driver for Realtek **RTL8192EU** based on official's **TP Link TL - WN823N
 
 ```shell
     - make (Tested on 4.2.1)
-    - gcc (Testedr on 8.2.0)
+    - gcc (Tested on 8.2.0)
     - git (OPTIONAL, Tested on 2.18.0)
  ```
 
