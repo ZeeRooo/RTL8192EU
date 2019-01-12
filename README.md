@@ -2,12 +2,20 @@
 Linux driver for Realtek **RTL8192EU** based on official's **TP Link TL - WN823N V3 Beta** v5.2.19.1 from 2018-05-08 
 
 # Supported devices:
+- DWA-131 _(untested)_
+- GW-300S Katana _(untested)_
 - TL-WN821N V6 _(untested)_
 - TL-WN822N V5 _(untested)_
 - TL-WN823N V3 _(tested)_
 
 # Changelog:
-- Added compatibility for Linux Kernel 4.15+
+- Monitor mode is now supported
+- Turned of powersaving
+- Turned of debug
+- Added compatibility for Linux Kernel v5.0-rc1
+- Added compatibility for Linux Kernel v4.20
+- Added compatibility for Linux Kernel v4.19+
+- Added compatibility for Linux Kernel v4.15+
 
 # Build guide
 
