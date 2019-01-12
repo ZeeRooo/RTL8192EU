@@ -1,5 +1,5 @@
 # RTL8192EU
-Linux driver for Realtek **RTL8192EU** based on official's **TP Link TL - WN823N V3 Beta** driver from 2018-05-08 
+Linux driver for Realtek **RTL8192EU** based on official's **TP Link TL - WN823N V3 Beta** v5.2.19.1 from 2018-05-08 
 
 # Supported devices:
 - TL-WN821N V6 _(untested)_
