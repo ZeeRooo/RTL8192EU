@@ -207,8 +207,10 @@ static struct usb_device_id rtw_usb_id_tbl[] = {
     {USB_DEVICE(0x2357, 0x0126) , .driver_info = RTL8192E}, /* TPLINK - TL-WN8200ND */
     {USB_DEVICE(0x2001, 0x3312) , .driver_info = RTL8192E}, /* D-Link - DWA-131 rev C1 */		
     {USB_DEVICE(0x2001, 0x3319) , .driver_info = RTL8192E}, /* D-Link - DWA-131 rev E1 */
+	{USB_DEVICE(0x2019, 0xAB33), .driver_info = RTL8192E}, /* PLANEX - GW-300S Katana */		
+#endif
 		
-#ifdef CONFIG_RTL8723B
+		#ifdef CONFIG_RTL8723B
 	/* === Realtek demoboard === */
 	{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDER_ID_REALTEK, 0xB720, 0xff, 0xff, 0xff), .driver_info = RTL8723B}, /* 8723BU 1*1 */
 	/* {USB_DEVICE(USB_VENDER_ID_REALTEK, 0xB720),.driver_info = RTL8723B},  8723BU */
