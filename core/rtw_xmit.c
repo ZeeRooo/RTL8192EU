@@ -4231,6 +4231,21 @@ int rtw_ieee80211_radiotap_iterator_init(
 	struct ieee80211_radiotap_header *radiotap_header,
 	int max_length, const struct ieee80211_radiotap_vendor_namespaces *vns);
 
+static struct xmit_frame* monitor_alloc_mgtxmitframe(struct xmit_priv *pxmitpriv) {
+	int tries;
+	int delay = 300;
+	struct xmit_frame *pmgntframe = NULL;
+
+	for(tries = 3; tries >= 0; tries--) {
+		pmgntframe = alloc_mgtxmitframe(pxmitpriv);
+		if(pmgntframe != NULL)
+			return pmgntframe;
+		rtw_udelay_os(delay);
+		delay += delay/2;
+	}
+	return NULL;
+}
+
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24))
 s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 {
@@ -4276,6 +4291,11 @@ s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 	rtap_len = ieee80211_get_radiotap_len(skb->data);
 	if (unlikely(skb->len < rtap_len))
 		goto fail;
+
+	if ((pmgntframe = monitor_alloc_mgtxmitframe(pxmitpriv)) == NULL) {
+		DBG_COUNTER(padapter->tx_logs.core_tx_err_pxmitframe);
+		return NETDEV_TX_BUSY;
+	}
 
 	ret = rtw_ieee80211_radiotap_iterator_init(&iterator, rtap_hdr, skb->len, NULL);
 	while (!ret) {
@@ -4358,10 +4378,6 @@ s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 //	frame_ctl = le16_to_cpu(dot11_hdr->frame_control);
 	/* Check if the QoS bit is set */
 
-	if ((pmgntframe = alloc_mgtxmitframe(pxmitpriv)) == NULL) {
-		rtw_udelay_os(500);
-		goto fail;
-	}
 	pattrib = &pmgntframe->attrib;
 	update_monitor_frame_attrib(padapter, pattrib);
 
@@ -4388,10 +4404,11 @@ s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 
 	pattrib->last_txcmdsz = pattrib->pktlen;
 	dump_mgntframe(padapter, pmgntframe);
+	DBG_COUNTER(padapter->tx_logs.core_tx);
 
 fail:
 	rtw_skb_free(skb);
-	return 0;
+	return NETDEV_TX_OK;
 }
 #endif
 /*
