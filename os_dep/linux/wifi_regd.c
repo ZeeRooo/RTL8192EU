@@ -318,15 +318,10 @@ static void _rtw_reg_apply_flags(struct wiphy *wiphy)
 #if 1				/* by channel plan */
 	_adapter *padapter = wiphy_to_adapter(wiphy);
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(padapter);
-	u8 channel_plan = rfctl->ChannelPlan;
-	RT_CHANNEL_INFO *channel_set = rfctl->channel_set;
-	u8 max_chan_nums = rfctl->max_chan_nums;
-
 	struct ieee80211_supported_band *sband;
 	struct ieee80211_channel *ch;
 	unsigned int i, j;
 	u16 channel;
-	u32 freq;
 
 	/* all channels disable */
 	for (i = 0; i < NUM_NL80211_BANDS; i++) {
@@ -337,30 +332,8 @@ static void _rtw_reg_apply_flags(struct wiphy *wiphy)
 				ch = &sband->channels[j];
 
 				if (ch)
-					ch->flags = IEEE80211_CHAN_DISABLED;
+					ch->flags &= ~(IEEE80211_CHAN_DISABLED|IEEE80211_CHAN_NO_HT40PLUS|IEEE80211_CHAN_NO_HT40MINUS);
 			}
-		}
-	}
-
-	/* channels apply by channel plans. */
-	for (i = 0; i < max_chan_nums; i++) {
-		channel = channel_set[i].ChannelNum;
-		freq = rtw_ch2freq(channel);
-
-		ch = ieee80211_get_channel(wiphy, freq);
-		if (ch) {
-			if (channel_set[i].ScanType == SCAN_PASSIVE
-				#if defined(CONFIG_DFS_MASTER)
-				&& rtw_odm_dfs_domain_unknown(wiphy_to_adapter(wiphy))
-				#endif
-			) {
-				#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 14, 0))
-				ch->flags = (IEEE80211_CHAN_NO_IBSS | IEEE80211_CHAN_PASSIVE_SCAN);
-				#else
-				ch->flags = IEEE80211_CHAN_NO_IR;
-				#endif
-			} else
-				ch->flags = 0;
 		}
 	}
 
