@@ -41,13 +41,13 @@ Linux driver for Realtek **RTL8192EU** based on official's **TP Link TL - WN823N
  ```shell
     $ make clean
     $ make
-    # make install
+    $ make install
  ```
  
   4. Load our shiny module:
  
  ```shell
-    # modprobe 8192eu
+    $ modprobe 8192eu
  ```
  
  # Original TP Link driver:
