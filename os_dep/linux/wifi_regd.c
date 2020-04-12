@@ -59,34 +59,35 @@ static struct country_code_to_enum_rd allCountries[] = {
 
 /* 5G chan 36 - chan 64 */
 #define RTW_5GHZ_5150_5350	\
-	REG_RULE(5150-10, 5350+10, 40, 0, 30,	\
-		 NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS)
+	REG_RULE(5150-10, 5350+10, 80, 0, 30,	\
+	NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS)
 
 /* 5G chan 100 - chan 165 */
 #define RTW_5GHZ_5470_5850	\
-	REG_RULE(5470-10, 5850+10, 40, 0, 30, \
-		 NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS)
+	REG_RULE(5470-10, 5850+10, 80, 0, 30, \
+	NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS)
 
 /* 5G chan 149 - chan 165 */
 #define RTW_5GHZ_5725_5850	\
-	REG_RULE(5725-10, 5850+10, 40, 0, 30, \
-		 NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS)
+	REG_RULE(5725-10, 5850+10, 80, 0, 30, \
+	NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS)
 
 /* 5G chan 36 - chan 165 */
 #define RTW_5GHZ_5150_5850	\
-	REG_RULE(5150-10, 5850+10, 40, 0, 30,	\
-		 NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS)
+	REG_RULE(5150-10, 5850+10, 80, 0, 30,	\
+	NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS)
 
 static const struct ieee80211_regdomain rtw_regdom_rd = {
-	.n_reg_rules = 3,
+	.n_reg_rules = 4,
 	.alpha2 = "99",
 	.reg_rules = {
 		RTW_2GHZ_CH01_11,
 		RTW_2GHZ_CH12_13,
+		RTW_2GHZ_CH14,
 		RTW_5GHZ_5150_5850,
 	}
 };
-
+#if 0
 static const struct ieee80211_regdomain rtw_regdom_11 = {
 	.n_reg_rules = 1,
 	.alpha2 = "99",
@@ -144,7 +145,7 @@ static const struct ieee80211_regdomain rtw_regdom_14 = {
 		RTW_2GHZ_CH14,
 	}
 };
-
+#endif
 #if 0
 static struct rtw_regulatory *rtw_regd;
 #endif
@@ -317,15 +318,10 @@ static void _rtw_reg_apply_flags(struct wiphy *wiphy)
 #if 1				/* by channel plan */
 	_adapter *padapter = wiphy_to_adapter(wiphy);
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(padapter);
-	u8 channel_plan = rfctl->ChannelPlan;
-	RT_CHANNEL_INFO *channel_set = rfctl->channel_set;
-	u8 max_chan_nums = rfctl->max_chan_nums;
-
 	struct ieee80211_supported_band *sband;
 	struct ieee80211_channel *ch;
 	unsigned int i, j;
 	u16 channel;
-	u32 freq;
 
 	/* all channels disable */
 	for (i = 0; i < NUM_NL80211_BANDS; i++) {
@@ -336,30 +332,10 @@ static void _rtw_reg_apply_flags(struct wiphy *wiphy)
 				ch = &sband->channels[j];
 
 				if (ch)
-					ch->flags = IEEE80211_CHAN_DISABLED;
+					ch->flags &= ~(IEEE80211_CHAN_DISABLED|IEEE80211_CHAN_NO_HT40PLUS|
+						IEEE80211_CHAN_NO_HT40MINUS|IEEE80211_CHAN_NO_80MHZ|
+						IEEE80211_CHAN_NO_160MHZ|IEEE80211_CHAN_NO_IR);
 			}
-		}
-	}
-
-	/* channels apply by channel plans. */
-	for (i = 0; i < max_chan_nums; i++) {
-		channel = channel_set[i].ChannelNum;
-		freq = rtw_ch2freq(channel);
-
-		ch = ieee80211_get_channel(wiphy, freq);
-		if (ch) {
-			if (channel_set[i].ScanType == SCAN_PASSIVE
-				#if defined(CONFIG_DFS_MASTER)
-				&& rtw_odm_dfs_domain_unknown(wiphy_to_adapter(wiphy))
-				#endif
-			) {
-				#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 14, 0))
-				ch->flags = (IEEE80211_CHAN_NO_IBSS | IEEE80211_CHAN_PASSIVE_SCAN);
-				#else
-				ch->flags = IEEE80211_CHAN_NO_IR;
-				#endif
-			} else
-				ch->flags = 0;
 		}
 	}
 

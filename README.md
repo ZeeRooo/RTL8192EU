@@ -1,5 +1,6 @@
 # RTL8192EU
 Linux driver for Realtek **RTL8192EU** based on official's **TP Link TL - WN823N V3 Beta** v5.2.19.1 from 2018-05-08 
+<br>Supports monitor mode and frame injection for penetration testing abilities.
 
 # Supported devices:
 - DWA-131 _(untested)_
@@ -9,6 +10,7 @@ Linux driver for Realtek **RTL8192EU** based on official's **TP Link TL - WN823N
 - TL-WN823N V3 _(tested)_
 
 # Changelog:
+- Added frame injection support
 - Monitor mode is now supported
 - Turned of powersaving
 - Turned of debug
@@ -39,13 +41,13 @@ Linux driver for Realtek **RTL8192EU** based on official's **TP Link TL - WN823N
  ```shell
     $ make clean
     $ make
-    # make install
+    $ make install
  ```
  
   4. Load our shiny module:
  
  ```shell
-    # modprobe 8192eu
+    $ modprobe 8192eu
  ```
  
  # Original TP Link driver:
