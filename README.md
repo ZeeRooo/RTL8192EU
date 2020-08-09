@@ -6,7 +6,7 @@ Linux driver for Realtek **RTL8192EU** based on official's **TP Link TL - WN823N
 - DWA-131 _(untested)_
 - GW-300S Katana _(untested)_
 - TL-WN821N V6 _(untested)_
-- TL-WN822N V5 _(untested)_
+- TL-WN822N V5 _(tested)_
 - TL-WN823N V3 _(tested)_
 
 # Changelog:
