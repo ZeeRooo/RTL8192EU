@@ -30,12 +30,6 @@
 
 #include <rtw_wifi_regd.h>
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 4, 0))
-	#define IEEE80211_BAND_2GHZ NL80211_BAND_2GHZ
-	#define IEEE80211_BAND_5GHZ NL80211_BAND_5GHZ
-	#define ieee80211_band nl80211_band
-#endif
-
 #define RTW_MAX_MGMT_TX_CNT (8)
 #define RTW_MAX_MGMT_TX_MS_GAS (500)
 
@@ -577,14 +571,12 @@ static const struct ieee80211_txrx_stypes
 
 static u64 rtw_get_systime_us(void)
 {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 39))
-	#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 20, 0)
-		struct timespec ts;
-		get_monotonic_boottime(&ts);
-		return ((u64)ts.tv_sec * 1000000) + ts.tv_nsec / 1000;
-	#else
-		return ktime_to_us(ktime_get_boottime());
-	#endif
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4,20,0))
+	return ktime_to_us(ktime_get_boottime());
+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 39))
+	struct timespec ts;
+	get_monotonic_boottime(&ts);
+	return ((u64)ts.tv_sec * 1000000) + ts.tv_nsec / 1000;
 #else
 	struct timeval tv;
 	do_gettimeofday(&tv);
@@ -6124,6 +6116,7 @@ exit:
 	return ret;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 8, 0))
 static void cfg80211_rtw_mgmt_frame_register(struct wiphy *wiphy,
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0))
 	struct wireless_dev *wdev,
@@ -6131,7 +6124,16 @@ static void cfg80211_rtw_mgmt_frame_register(struct wiphy *wiphy,
 	struct net_device *ndev,
 #endif
 	u16 frame_type, bool reg)
+#else
+static void cfg80211_rtw_update_mgmt_frame_register(struct wiphy *wiphy,
+						    struct wireless_dev *wdev,
+						    struct mgmt_frame_regs *upd)
+#endif
 {
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 8, 0))
+	u32 rtw_mask = BIT(IEEE80211_STYPE_PROBE_REQ >> 4);
+#endif
+
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0))
 	struct net_device *ndev = wdev_to_ndev(wdev);
 #endif
@@ -6146,13 +6148,19 @@ static void cfg80211_rtw_mgmt_frame_register(struct wiphy *wiphy,
 	pwdev_priv = adapter_wdev_data(adapter);
 
 #ifdef CONFIG_DEBUG_CFG80211
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 8, 0))
 	RTW_INFO(FUNC_ADPT_FMT" frame_type:%x, reg:%d\n", FUNC_ADPT_ARG(adapter),
 		frame_type, reg);
+#else
+	RTW_INFO(FUNC_ADPT_FMT " old_regs:%x new_regs:%x\n",
+		 FUNC_ADPT_ARG(adapter), pwdev_priv->mgmt_mask, upd->interface_stypes);
+#endif		
 #endif
 
 	/* Wait QC Verify */
 	return;
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 8, 0))
 	switch (frame_type) {
 	case IEEE80211_STYPE_PROBE_REQ: /* 0x0040 */
 		SET_CFG80211_REPORT_MGMT(pwdev_priv, IEEE80211_STYPE_PROBE_REQ, reg);
@@ -6163,6 +6171,12 @@ static void cfg80211_rtw_mgmt_frame_register(struct wiphy *wiphy,
 	default:
 		break;
 	}
+#else
+	if ((upd->interface_stypes & rtw_mask) == (pwdev_priv->mgmt_mask & rtw_mask))
+ 		return;
+
+	pwdev_priv->mgmt_mask = upd->interface_stypes;
+#endif
 
 exit:
 	return;
@@ -7362,7 +7376,11 @@ static struct cfg80211_ops rtw_cfg80211_ops = {
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37)) || defined(COMPAT_KERNEL_RELEASE)
 	.mgmt_tx = cfg80211_rtw_mgmt_tx,
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 8, 0))	
 	.mgmt_frame_register = cfg80211_rtw_mgmt_frame_register,
+#else
+	.update_mgmt_frame_registrations = cfg80211_rtw_update_mgmt_frame_register,
+#endif	
 #elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34) && LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 35))
 	.action = cfg80211_rtw_mgmt_tx,
 #endif
